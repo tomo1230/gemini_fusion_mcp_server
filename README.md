@@ -55,6 +55,11 @@
 ### Step 4: Gemini CLIでの使用
 セットアップが完了すれば、Gemini CLIチャットでFusion を操作できます。
 
+<img width="1115" height="628" alt="20250825142703" src="https://github.com/user-attachments/assets/ff1662b3-5457-4ee6-b872-c10a58ef913f" />
+
+**Ctl + t ショートカットキーで起動できているか確認して下さい。**
+<img width="1102" height="988" alt="20250825142810" src="https://github.com/user-attachments/assets/e671b974-66e4-4077-9c79-61ec36655d8e" />
+
 **使用例:**
 -   `@Fusion360 幅50、奥行き30、高さ20の箱を作って`
 -   `@Fusion360 "MyCube" という名前の立方体を作成して、その寸法を教えて`
