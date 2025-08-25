@@ -542,7 +542,7 @@ class FixedFusion360MCPServer {
                 { name: 'select_all_bodies', description: 'ドキュメント内のすべてのボディを選択します。', inputSchema: { type: 'object', properties: {} } },
                 
                 // === Utility & Debug Tools ===
-                { name: 'delete_selection_features', description: '選択したフィーチャをタイムラインから削除します。', inputSchema: { type: 'object', properties: {} } },
+                { name: 'delete_all_features', description: 'タイムライン上のすべてのフィーチャを削除し、デザインを初期化します。', inputSchema: { type: 'object', properties: {} } },
                 { name: 'debug_coordinate_info', description: '座標系や単位に関するデバッグ情報を出力します。', inputSchema: { type: 'object', properties: { show_details: { type: 'boolean', default: true, description: '詳細情報を表示するかどうか。' } } } },
                 {
                     name: 'debug_body_placement',
