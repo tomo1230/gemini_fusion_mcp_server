@@ -1,0 +1,10 @@
+{
+  "theme": "Default",
+  "selectedAuthType": "oauth-personal",
+  "mcpServers": {
+    "fusion": {
+      "command": "node",
+      "args": ["E:\\gemini_fusion_mcp_server\\fusion_mcp_server.js"]
+    }
+  }
+}
