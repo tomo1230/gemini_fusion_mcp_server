@@ -29,7 +29,7 @@ const responseFilePath = path.join(os.homedir(), 'Documents', 'fusion_response.t
 
 class FixedFusion360MCPServer {
     constructor() {
-        logDebug('Initializing Complete Fusion360MCPServer...');
+        logDebug('Initializing Complete FusionMCPServer...');
         this.server = new Server(
             {
                 name: 'fusion-mcp-server-complete',
@@ -445,43 +445,49 @@ class FixedFusion360MCPServer {
                             quantity_one: { type: 'number', default: 2, description: '1方向目の個数。' },
                             distance_one: { type: 'number', default: 10, description: '1方向目の距離 (mm)。' },
                             direction_one_axis: { type: 'string', enum: ['x', 'y', 'z'], default: 'x', description: '1方向目の軸。' },
-                            direction_one_type: { type: 'string', enum: ['one_direction', 'symmetric'], default: 'one_direction', description: '1方向目のパターンタイプ。' },
                             quantity_two: { type: 'number', default: 1, description: '2方向目の個数（1Dパターンの場合は1）。' },
                             distance_two: { type: 'number', default: 10, description: '2方向目の距離 (mm)。' },
                             direction_two_axis: { type: 'string', enum: ['x', 'y', 'z'], default: 'y', description: '2方向目の軸。' },
-                            direction_two_type: { type: 'string', enum: ['one_direction', 'symmetric'], default: 'one_direction', description: '2方向目のパターンタイプ。' },
                             new_body_base_name: { type: 'string', description: '新しいボディのベース名（任意）。' }
                         },
                         required: ['source_body_name', 'quantity_one', 'distance_one', 'direction_one_axis']
                     }
                 },
                 // === Modification Tools ===
-                {
-                    name: 'add_fillet',
-                    description: '指定されたボディのエッジにフィレットを追加します。エッジを指定しない場合、全ての外周エッジが対象になります。',
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            body_name: { type: 'string', description: 'フィレットを適用するボディの名前。' },
-                            radius: { type: 'number', default: 1.0, description: 'フィレットの半径 (mm)。' },
-                            edge_indices: { type: 'array', items: { type: 'number' }, description: 'フィレットを適用するエッジのインデックスのリスト（任意）。' }
-                        },
-                        required: ['body_name']
-                    }
-                },
-                {
-                    name: 'add_chamfer',
-                    description: '指定されたボディのエッジに面取りを追加します。エッジを指定しない場合、全ての外周エッジが対象になります。',
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            body_name: { type: 'string', description: '面取りを適用するボディの名前。' },
-                            distance: { type: 'number', default: 1.0, description: '面取りの距離 (mm)。' },
-                            edge_indices: { type: 'array', items: { type: 'number' }, description: '面取りを適用するエッジのインデックスのリスト（任意）。' }
-                        },
-                        required: ['body_name']
-                    }
-                },
+				{
+					name: 'add_fillet',
+					description: '指定したボディの特定のエッジにフィレットを追加します。',
+					inputSchema: {
+						type: 'object',
+						properties: {
+							body_name: { type: 'string', description: 'フィレットを適用するボディの名前。' },
+							radius: { type: 'number', default: 1, description: 'フィレット半径 (mm)。' },
+							edge_indices: {
+								type: 'array',
+								description: 'フィレットを適用するエッジのインデックス番号のリスト。get_edges_infoで確認できます。省略するとボディの全ての外周エッジが対象になります。',
+								items: { type: 'integer' }
+							}
+						},
+						required: ['body_name', 'radius']
+					}
+				},
+				{
+					name: 'add_chamfer',
+					description: '指定したボディの特定のエッジに面取りを追加します。',
+					inputSchema: {
+						type: 'object',
+						properties: {
+							body_name: { type: 'string', description: '面取りを適用するボディの名前。' },
+							distance: { type: 'number', default: 1, description: '面取り距離 (mm)。' },
+							edge_indices: {
+								type: 'array',
+								description: '面取りを適用するエッジのインデックス番号のリスト。get_edges_infoで確認できます。省略するとボディの全ての外周エッジが対象になります。',
+								items: { type: 'integer' }
+							}
+						},
+						required: ['body_name', 'distance']
+					}
+				},
                 {
                     name: 'combine_selection',
                     description: '選択した複数のボディを結合（ブール演算）します。最初の選択がターゲットになります。',
@@ -544,21 +550,10 @@ class FixedFusion360MCPServer {
                 // === Utility & Debug Tools ===
                 { name: 'delete_all_features', description: 'タイムライン上のすべてのフィーチャを削除し、デザインを初期化します。', inputSchema: { type: 'object', properties: {} } },
                 { name: 'debug_coordinate_info', description: '座標系や単位に関するデバッグ情報を出力します。', inputSchema: { type: 'object', properties: { show_details: { type: 'boolean', default: true, description: '詳細情報を表示するかどうか。' } } } },
-                {
-                    name: 'debug_body_placement',
-                    description: '指定されたボディの配置に関する詳細なデバッグ情報を取得します。',
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            body_name: { type: 'string', description: '情報を取得するボディの名前。' }
-                        },
-                        required: ['body_name']
-                    }
-                },
                 // === Body Information Tools ===
                 {
                     name: 'get_bounding_box',
-                    description: '指定したボディのバウンディングボックス情報（最小/最大点、サイズ、中心）を取得します。',
+                    description: '指定したボディのバウンディングボックス情報を取得します。',
                     inputSchema: {
                         type: 'object',
                         properties: { body_name: { type: 'string', description: '情報を取得するボディの名前。' } },
@@ -567,7 +562,7 @@ class FixedFusion360MCPServer {
                 },
                 {
                     name: 'get_body_center',
-                    description: '指定したボディの中心点情報（幾何学的中心、重心）を取得します。',
+                    description: '指定したボディの中心点情報（幾何学的中心、重心、バウンディング中心）を取得します。',
                     inputSchema: {
                         type: 'object',
                         properties: { body_name: { type: 'string', description: '情報を取得するボディの名前。' } },
@@ -576,7 +571,7 @@ class FixedFusion360MCPServer {
                 },
                 {
                     name: 'get_body_dimensions',
-                    description: '指定したボディの詳細な寸法情報（長さ、幅、高さ、体積、表面積）を取得します。',
+                    description: '指定したボディの詳細寸法情報（長さ、幅、高さ、体積、表面積）を取得します。',
                     inputSchema: {
                         type: 'object',
                         properties: { body_name: { type: 'string', description: '情報を取得するボディの名前。' } },
@@ -585,7 +580,7 @@ class FixedFusion360MCPServer {
                 },
                 {
                     name: 'get_faces_info',
-                    description: '指定したボディのすべての面の情報（ID、面積、タイプ、法線など）を取得します。',
+                    description: '指定したボディの面情報（タイプ、面積、法線、中心点など）を取得します。',
                     inputSchema: {
                         type: 'object',
                         properties: { body_name: { type: 'string', description: '情報を取得するボディの名前。' } },
@@ -594,7 +589,7 @@ class FixedFusion360MCPServer {
                 },
                 {
                     name: 'get_edges_info',
-                    description: '指定したボディのすべてのエッジの情報（ID、長さ、タイプ、始点/終点など）を取得します。',
+                    description: '指定したボディのエッジ情報（タイプ、長さ、方向、始点・終点など）を取得します。',
                     inputSchema: {
                         type: 'object',
                         properties: { body_name: { type: 'string', description: '情報を取得するボディの名前。' } },
@@ -608,37 +603,37 @@ class FixedFusion360MCPServer {
                         type: 'object',
                         properties: {
                             body_name: { type: 'string', description: '情報を取得するボディの名前。' },
-                            material_density: { type: 'number', default: 1.0, description: '材料密度 (g/cm³)。' }
+                            material_density: { type: 'number', default: 1.0, description: '材料密度 (g/cm³)。質量計算に使用されます。' }
                         },
                         required: ['body_name']
                     }
                 },
                 {
                     name: 'get_body_relationships',
-                    description: '2つのボディ間の位置関係（距離、干渉、相対位置）を取得します。',
+                    description: '2つのボディ間の位置関係（距離、干渉、相対位置など）を取得します。',
                     inputSchema: {
                         type: 'object',
                         properties: {
-                            body_name: { type: 'string', description: '1つ目のボディの名前。' },
-                            other_body_name: { type: 'string', description: '2つ目のボディの名前。' }
+                            body_name: { type: 'string', description: '基準となるボディの名前。' },
+                            other_body_name: { type: 'string', description: '比較対象のボディの名前。' }
                         },
                         required: ['body_name', 'other_body_name']
                     }
                 },
                 {
                     name: 'measure_distance',
-                    description: '2つのボディ間の距離（重心間、バウンディングボックス間のクリアランス）を測定します。',
+                    description: '2つのボディ間の距離を測定します（重心間距離とバウンディングボックス間クリアランス）。',
                     inputSchema: {
                         type: 'object',
                         properties: {
-                            body_name1: { type: 'string', description: '1つ目のボディの名前。' },
-                            body_name2: { type: 'string', description: '2つ目のボディの名前。' }
+                            body_name1: { type: 'string', description: '距離測定する1つ目のボディの名前。' },
+                            body_name2: { type: 'string', description: '距離測定する2つ目のボディの名前。' }
                         },
                         required: ['body_name1', 'body_name2']
                     }
                 }
             ];
-            logDebug(`Returning ${tools.length} tools`);
+            logDebug(`Returning ${tools.length} tools (including body info functions)`);
             return { tools };
         });
 
